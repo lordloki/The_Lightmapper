@@ -1038,7 +1038,17 @@ def setMode():
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
 
-    bpy.ops.object.mode_set(mode='OBJECT')
+    hidden = False
+
+    if obj.hide_get():
+        hidden = True
+    if obj.hide_viewport:
+        hidden = True
+    if obj.hide_render:
+        hidden = True
+
+    if not hidden:
+        bpy.ops.object.mode_set(mode='OBJECT')
 
     #TODO Make some checks that returns to previous selection
 
