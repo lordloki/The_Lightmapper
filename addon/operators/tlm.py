@@ -75,9 +75,11 @@ class TLM_CleanLightmaps(bpy.types.Operator):
 
         filepath = bpy.data.filepath
         dirpath = os.path.join(os.path.dirname(bpy.data.filepath), scene.TLM_EngineProperties.tlm_lightmap_savedir)
-        if os.path.isdir(dirpath):
-            for file in os.listdir(dirpath):
-                os.remove(os.path.join(dirpath + "/" + file))
+
+        if not bpy.context.scene.TLM_SceneProperties.tlm_keep_baked_files:
+            if os.path.isdir(dirpath):
+                for file in os.listdir(dirpath):
+                    os.remove(os.path.join(dirpath + "/" + file))
 
         for obj in bpy.context.scene.objects:
             if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
@@ -959,8 +961,6 @@ class TLM_PrepareUVMaps(bpy.types.Operator):
 
         scene = context.scene
 
-
-
         return {'FINISHED'}
 
 class TLM_LoadLightmaps(bpy.types.Operator): 
@@ -975,7 +975,9 @@ class TLM_LoadLightmaps(bpy.types.Operator):
 
         utility.transfer_load()
 
-        build.finish_assemble()
+        print("Transfer finished")
+
+        build.finish_assemble(self, 1, 1)
 
         return {'FINISHED'}
 

@@ -45,6 +45,11 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         description="Keep cache files (non-filtered and non-denoised)", 
         default=True)
 
+    tlm_keep_baked_files : BoolProperty(
+        name="Keep bake files", 
+        description="Keep the baked lightmap files when cleaning", 
+        default=False)
+
     tlm_setting_renderer : EnumProperty(
         items = [('CPU', 'CPU', 'Bake using the processor'),
                 ('GPU', 'GPU', 'Bake using the graphics card')],
@@ -462,6 +467,11 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         name="Load Folder",
         description="Load existing lightmaps from folder",
         subtype="DIR_PATH")
+
+    tlm_load_atlas : BoolProperty(
+        name="Load lightmaps based on atlas sets", 
+        description="Use the current Atlas list.", 
+        default=False)
 
     tlm_utility_set : EnumProperty(
         items = [('Scene', 'Scene', 'Set for all objects in the scene.'),

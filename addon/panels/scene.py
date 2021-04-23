@@ -75,6 +75,8 @@ class TLM_PT_Settings(bpy.types.Panel):
             row.prop(sceneProperties, "tlm_reset_uv")
             row = layout.row(align=True)
             row.prop(sceneProperties, "tlm_apply_modifiers")
+            row = layout.row(align=True)
+            row.prop(sceneProperties, "tlm_keep_baked_files")
 
             row = layout.row(align=True)
             try:
@@ -461,7 +463,8 @@ class TLM_PT_Utility(bpy.types.Panel):
         row.prop(sceneProperties, "tlm_load_folder")
         row = layout.row()
         row.operator("tlm.load_lightmaps")
-
+        row = layout.row()
+        row.prop(sceneProperties, "tlm_load_atlas")
 
 class TLM_PT_Selection(bpy.types.Panel):
     bl_label = "Selection"
