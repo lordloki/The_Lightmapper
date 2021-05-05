@@ -1,6 +1,6 @@
 import bpy, os, subprocess, sys, platform, aud, json, datetime, socket
 
-from . import encoding, pack
+from . import encoding, pack, log
 from . cycles import lightmap, prepare, nodes, cache
 from . luxcore import setup
 from . octane import configure, lightmap2
@@ -16,8 +16,13 @@ from importlib import util
 
 previous_settings = {}
 postprocess_shutdown = False
+logging = True
 
 def prepare_build(self=0, background_mode=False, shutdown_after_build=False):
+
+    global tlm_log
+    tlm_log = log.TLM_Logman()
+    tlm_log.append("Preparing build")
 
     if shutdown_after_build:
         postprocess_shutdown = True
@@ -174,6 +179,7 @@ def distribute_building():
         
         if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
             print("No process file - Creating one...")
+            tlm_log.append("No process file - Creating one...")
         
         write_directory = os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_EngineProperties.tlm_lightmap_savedir)
 
@@ -197,6 +203,7 @@ def distribute_building():
                 bpy.app.driver_namespace["tlm_process"] = subprocess.Popen([bpy.app.binary_path,"-b", blendPath,"--python-expr",'import bpy; import thelightmapper; thelightmapper.addon.utility.build.prepare_build(0, True);'], shell=False, stdout=subprocess.PIPE)
             else:
                 bpy.app.driver_namespace["tlm_process"] = subprocess.Popen([bpy.app.binary_path,"-b", blendPath,"--python-expr",'import bpy; import thelightmapper; thelightmapper.addon.utility.build.prepare_build(0, True);'], shell=False, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        tlm_log.append("Started process: " + str(bpy.app.driver_namespace["tlm_process"]) + " at " + str(datetime.datetime.now()))
         if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
             print("Started process: " + str(bpy.app.driver_namespace["tlm_process"]) + " at " + str(datetime.datetime.now()))
 
@@ -208,6 +215,7 @@ def distribute_building():
 
         if process_status[1]["completed"]:
 
+            tlm_log.append("Baking finished from process. Status: Completed.")
             if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                 print("Baking finished")
 
@@ -218,11 +226,13 @@ def distribute_building():
         else:
 
             #Open the json and check the status!
+            tlm_log.append("Process check: Baking in progress.")
             if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                 print("Baking in progress")
             
             process_status = json.loads(open(os.path.join(write_directory, "process.tlm")).read())
 
+            tlm_log.append(process_status)
             if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                 print(process_status)
 
@@ -235,7 +245,9 @@ def finish_assemble(self=0, background_pass=0, load_atlas=0):
 
     if load_atlas:
         print("Assembly in Atlas load mode")
+        tlm_log.append("Assembly in Atlas load mode")
 
+    tlm_log.append("Background baking finished")
     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
         print("Background baking finished")
 
@@ -272,7 +284,18 @@ def begin_build():
 
     if sceneProperties.tlm_lightmap_engine == "Cycles":
 
-        lightmap.bake()
+        try:
+            lightmap.bake()
+        except Exception as e:
+
+            print("An error occured during lightmap baking. See the line below for more detail:")
+            print(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+            tlm_log.append("An error occured during lightmap baking. See the line below for more detail:")
+            tlm_log.append(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+            if not bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                print("Turn on verbose mode to get more detail.")
 
     if sceneProperties.tlm_lightmap_engine == "LuxCoreRender":
         pass
@@ -294,6 +317,7 @@ def begin_build():
                 if file.endswith("_baked.hdr"):
                     baked_image_array.append(file)
 
+            tlm_log.append(baked_image_array)
             if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                 print(baked_image_array)
 
@@ -319,7 +343,18 @@ def begin_build():
 
             denoiser = oidn.TLM_OIDN_Denoise(oidnProperties, baked_image_array, dirpath)
 
-            denoiser.denoise()
+            try:
+                denoiser.denoise()
+            except Exception as e:
+
+                print("An error occured during denoising. See the line below for more detail:")
+                print(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+                tlm_log.append("An error occured during denoising. See the line below for more detail:")
+                tlm_log.append(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+                if not bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                    print("Turn on verbose mode to get more detail.")
 
             denoiser.clean()
 
@@ -355,7 +390,19 @@ def begin_build():
 
         filter = opencv.TLM_CV_Filtering
 
-        filter.init(dirpath, useDenoise)
+        try:
+            filter.init(dirpath, useDenoise)
+
+        except Exception as e:
+
+            print("An error occured during filtering. See the line below for more detail:")
+            print(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+            tlm_log.append("An error occured during filtering. See the line below for more detail:")
+            tlm_log.append(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+            if not bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                print("Turn on verbose mode to get more detail.")
 
     #Encoding
     if sceneProperties.tlm_encoding_use and scene.TLM_EngineProperties.tlm_bake_mode != "Background":
@@ -366,7 +413,9 @@ def begin_build():
 
                 if sceneProperties.tlm_format == "EXR":
 
+                    tlm_log.append("EXR Format")
                     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                        
                         print("EXR Format")
 
                     ren = bpy.context.scene.render
@@ -396,7 +445,9 @@ def begin_build():
 
             if sceneProperties.tlm_encoding_mode_a == "RGBM":
 
+                tlm_log.append("ENCODING RGBM")
                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                    
                     print("ENCODING RGBM")
 
                 dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
@@ -416,13 +467,16 @@ def begin_build():
 
                         img = bpy.data.images.load(os.path.join(dirpath, file), check_existing=False)
                         
+                        tlm_log.append("Encoding:" + str(file))
                         if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                             print("Encoding:" + str(file))
                         encoding.encodeImageRGBMCPU(img, sceneProperties.tlm_encoding_range, dirpath, 0)
 
             if sceneProperties.tlm_encoding_mode_a == "RGBD":
 
+                tlm_log.append("ENCODING RGBD")
                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                    
                     print("ENCODING RGBD")
 
                 dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
@@ -443,12 +497,15 @@ def begin_build():
                         img = bpy.data.images.load(os.path.join(dirpath, file), check_existing=False)
                         
                         if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                            tlm_log.append("Encoding:" + str(file))
                             print("Encoding:" + str(file))
                         encoding.encodeImageRGBDCPU(img, sceneProperties.tlm_encoding_range, dirpath, 0)
 
             if sceneProperties.tlm_encoding_mode_a == "SDR":
 
+                tlm_log.append("EXR Format")
                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                    
                     print("EXR Format")
 
                 ren = bpy.context.scene.render
@@ -482,7 +539,9 @@ def begin_build():
 
                 if sceneProperties.tlm_format == "EXR":
 
+                    tlm_log.append("EXR Format")
                     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                        
                         print("EXR Format")
 
                     ren = bpy.context.scene.render
@@ -533,7 +592,9 @@ def begin_build():
 
             if sceneProperties.tlm_encoding_mode_b == "RGBM":
 
+                tlm_log.append("ENCODING RGBM")
                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                    
                     print("ENCODING RGBM")
 
                 dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
@@ -626,9 +687,36 @@ def manage_build(background_pass=False, load_atlas=0):
 
         if background_pass:
             print("In background pass")
-            nodes.apply_lightmaps()
 
-        nodes.apply_materials(load_atlas) #From here the name is changed...
+            try:
+
+                nodes.apply_lightmaps()
+
+            except Exception as e:
+
+                print("An error occured during lightmap application. See the line below for more detail:")
+                print(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+                tlm_log.append("An error occured during lightmap application. See the line below for more detail:")
+                tlm_log.append(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+                if not bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                    print("Turn on verbose mode to get more detail.")
+
+
+        try:
+            nodes.apply_materials(load_atlas) #From here the name is changed...
+
+        except Exception as e:
+
+            print("An error occured during material application. See the line below for more detail:")
+            print(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+            tlm_log.append("An error occured during material application. See the line below for more detail:")
+            tlm_log.append(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+            if not bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                print("Turn on verbose mode to get more detail.")
 
         end = "_baked"
 
@@ -825,7 +913,9 @@ def manage_build(background_pass=False, load_atlas=0):
                 print("Second AO pass complete")
 
                 total_time = sec_to_hours((time() - start_time))
+                tlm_log.append(total_time)
                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                    
                     print(total_time)
 
                 bpy.context.scene["TLM_Buildstat"] = total_time
@@ -845,6 +935,7 @@ def manage_build(background_pass=False, load_atlas=0):
         else:
 
             total_time = sec_to_hours((time() - start_time))
+            tlm_log.append(total_time)
             if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                 print(total_time)
 
@@ -852,6 +943,7 @@ def manage_build(background_pass=False, load_atlas=0):
 
             reset_settings(previous_settings["settings"])
 
+            tlm_log.append("Lightmap building finished")
             print("Lightmap building finished")
 
             if sceneProperties.tlm_lightmap_engine == "LuxCoreRender":
@@ -888,6 +980,9 @@ def manage_build(background_pass=False, load_atlas=0):
             device = aud.Device()
             sound = aud.Sound.file(sound_path)
             device.play(sound)
+
+        if logging:
+            tlm_log.dumpLog()
 
         if bpy.app.background:
 

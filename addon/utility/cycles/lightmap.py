@@ -4,6 +4,9 @@ from time import time, sleep
 
 def bake(plus_pass=0):
 
+    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+        print("Initializing lightmap baking.")
+
     for obj in bpy.context.scene.objects:
         bpy.ops.object.select_all(action='DESELECT')
         obj.select_set(False)
@@ -20,6 +23,9 @@ def bake(plus_pass=0):
         iterNum = iterNum - 1
 
     for obj in bpy.context.scene.objects:
+
+        if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+            print("Checking status for object and collections: " + obj.name)
 
         hidden = False
 
@@ -40,8 +46,13 @@ def bake(plus_pass=0):
                 hidden = True
             if collection.hide_render:
                 hidden = True
-            if bpy.context.scene.view_layers[0].layer_collection.children[collection.name].hide_viewport:
-                hidden = True
+                
+            try:
+                if collection.name in bpy.context.scene.view_layers[0].layer_collection.children:
+                    if bpy.context.scene.view_layers[0].layer_collection.children[collection.name].hide_viewport:
+                        hidden = True
+            except:
+                print("Error: Could not find collection: " + collection.name)
 
         if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use and not hidden:
@@ -78,10 +89,13 @@ def bake(plus_pass=0):
                     scene.render.bake.target = "VERTEX_COLORS"
 
                 if scene.TLM_EngineProperties.tlm_lighting_mode == "combined":
+                    print("Baking combined: Direct + Indirect")
                     bpy.ops.object.bake(type="DIFFUSE", pass_filter={"DIRECT","INDIRECT"}, margin=scene.TLM_EngineProperties.tlm_dilation_margin, use_clear=False)
                 elif scene.TLM_EngineProperties.tlm_lighting_mode == "indirect":
+                    print("Baking combined: Indirect")
                     bpy.ops.object.bake(type="DIFFUSE", pass_filter={"INDIRECT"}, margin=scene.TLM_EngineProperties.tlm_dilation_margin, use_clear=False)
                 elif scene.TLM_EngineProperties.tlm_lighting_mode == "ao":
+                    print("Baking combined: AO")
                     bpy.ops.object.bake(type="AO", margin=scene.TLM_EngineProperties.tlm_dilation_margin, use_clear=False)
                 elif scene.TLM_EngineProperties.tlm_lighting_mode == "combinedao":
 
