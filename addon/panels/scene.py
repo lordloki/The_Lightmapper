@@ -77,6 +77,8 @@ class TLM_PT_Settings(bpy.types.Panel):
             row.prop(sceneProperties, "tlm_apply_modifiers")
             row = layout.row(align=True)
             row.prop(sceneProperties, "tlm_keep_baked_files")
+            row = layout.row(align=True)
+            row.prop(sceneProperties, "tlm_repartition_on_clean")
 
             row = layout.row(align=True)
             try:
@@ -431,6 +433,8 @@ class TLM_PT_Utility(bpy.types.Panel):
         row = layout.row(align=True)
         row.operator("tlm.disable_specularity")
         row.operator("tlm.disable_metallic")
+        row = layout.row(align=True)
+        row.prop(sceneProperties, "tlm_remove_met_spec_link")
         row = layout.row(align=True)
 
 

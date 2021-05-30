@@ -59,22 +59,26 @@ def prepare_build(self=0, background_mode=False, shutdown_after_build=False):
         if check_save():
             print("Please save your file first")
             self.report({'INFO'}, "Please save your file first")
+            setGui(0)
             return{'FINISHED'}
 
         if check_denoiser():
             print("No denoise OIDN path assigned")
-            self.report({'INFO'}, "No denoise OIDN path assigned")
+            self.report({'INFO'}, "No denoise OIDN path assigned. Check that it points to the correct executable.")
+            setGui(0)
             return{'FINISHED'}
 
         if check_materials():
             print("Error with material")
             self.report({'INFO'}, "Error with material")
+            setGui(0)
             return{'FINISHED'}
 
         if opencv_check():
             if sceneProperties.tlm_filtering_use:
                 print("Error:Filtering - OpenCV not installed")
                 self.report({'INFO'}, "Error:Filtering - OpenCV not installed")
+                setGui(0)
                 return{'FINISHED'}
 
         setMode()
@@ -1112,6 +1116,11 @@ def check_denoiser():
             if platform.system() == "Windows":
                 if not scene.TLM_OIDNEngineProperties.tlm_oidn_path.endswith(".exe"):
                     return 1
+                else:
+                    if os.path.isfile(scene.TLM_OIDNEngineProperties.tlm_oidn_path):
+                        return 0
+                    else:
+                        return 1
             else:
                 return 0
 

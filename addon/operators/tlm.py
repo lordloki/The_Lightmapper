@@ -155,6 +155,27 @@ class TLM_CleanLightmaps(bpy.types.Operator):
                     if "Lightmap" in obj:
                         del obj["Lightmap"]
 
+        if bpy.context.scene.TLM_SceneProperties.tlm_repartition_on_clean:
+
+            mats = bpy.data.materials
+            
+            for obj in bpy.context.scene.objects:
+                if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
+                    if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+
+                        print("Repartitioning materials")
+
+                        for slt in obj.material_slots:
+                            print("Repartitioning material: " + str(slt.name))
+                            part = slt.name.rpartition('.')
+                            if part[2].isnumeric() and part[0] in mats:
+                                slt.material = mats.get(part[0])
+
+                        for slt in obj.material_slots:
+                            if slt.name.endswith(tuple(["001","002","003","004","005","006","007","008","009"])): #Do regex instead
+                                if not slt.name[:-4] in mats:
+                                    slt.material.name = slt.name[:-4]
+
         return {'FINISHED'}
 
 class TLM_ExploreLightmaps(bpy.types.Operator):
@@ -1060,6 +1081,10 @@ class TLM_DisableSpecularity(bpy.types.Operator):
 
                                 node.inputs[5].default_value = 0.0
 
+                                if node.inputs[5].links and bpy.context.scene.TLM_SceneProperties.tlm_remove_met_spec_link:
+
+                                    mat.node_tree.links.remove(node.inputs[5].links[0])
+
         elif bpy.context.scene.TLM_SceneProperties.tlm_utility_set == "Selection":
             for obj in bpy.context.selected_objects:
                 if obj.type == "MESH":
@@ -1073,6 +1098,10 @@ class TLM_DisableSpecularity(bpy.types.Operator):
                             if node.type == "BSDF_PRINCIPLED":
 
                                 node.inputs[5].default_value = 0.0
+
+                                if node.inputs[5].links and bpy.context.scene.TLM_SceneProperties.tlm_remove_met_spec_link:
+
+                                    mat.node_tree.links.remove(node.inputs[5].links[0])
 
         else: #Enabled
             for obj in bpy.context.scene.objects:
@@ -1088,6 +1117,10 @@ class TLM_DisableSpecularity(bpy.types.Operator):
                                 if node.type == "BSDF_PRINCIPLED":
 
                                     node.inputs[5].default_value = 0.0
+
+                                    if node.inputs[5].links and bpy.context.scene.TLM_SceneProperties.tlm_remove_met_spec_link:
+
+                                        mat.node_tree.links.remove(node.inputs[5].links[0])
 
         return{'FINISHED'}
 
@@ -1113,6 +1146,10 @@ class TLM_DisableMetallic(bpy.types.Operator):
 
                                 node.inputs[4].default_value = 0.0
 
+                                if node.inputs[4].links and bpy.context.scene.TLM_SceneProperties.tlm_remove_met_spec_link:
+
+                                    mat.node_tree.links.remove(node.inputs[4].links[0])
+
         elif bpy.context.scene.TLM_SceneProperties.tlm_utility_set == "Selection":
             for obj in bpy.context.selected_objects:
                 if obj.type == "MESH":
@@ -1126,6 +1163,10 @@ class TLM_DisableMetallic(bpy.types.Operator):
                             if node.type == "BSDF_PRINCIPLED":
 
                                 node.inputs[4].default_value = 0.0
+
+                                if node.inputs[4].links and bpy.context.scene.TLM_SceneProperties.tlm_remove_met_spec_link:
+
+                                    mat.node_tree.links.remove(node.inputs[4].links[0])
 
         else: #Enabled
             for obj in bpy.context.scene.objects:
@@ -1141,6 +1182,10 @@ class TLM_DisableMetallic(bpy.types.Operator):
                                 if node.type == "BSDF_PRINCIPLED":
 
                                     node.inputs[4].default_value = 0.0
+
+                                    if node.inputs[4].links and bpy.context.scene.TLM_SceneProperties.tlm_remove_met_spec_link:
+
+                                        mat.node_tree.links.remove(node.inputs[4].links[0])
 
         return{'FINISHED'}
 
