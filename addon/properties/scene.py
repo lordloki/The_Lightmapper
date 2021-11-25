@@ -53,7 +53,7 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
     tlm_repartition_on_clean : BoolProperty(
         name="Repartition on clean", 
         description="Repartition material names on clean", 
-        default=True)
+        default=False)
 
     tlm_setting_renderer : EnumProperty(
         items = [('CPU', 'CPU', 'Bake using the processor'),
@@ -111,6 +111,11 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
 
     tlm_apply_on_unwrap : BoolProperty(
         name="Apply scale", 
+        description="TODO", 
+        default=False)
+        
+    tlm_save_preprocess_lightmaps : BoolProperty(
+        name="Save preprocessed lightmaps", 
         description="TODO", 
         default=False)
 
@@ -531,7 +536,8 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
                  ('EnvironmentProbes', 'Environment Probes', 'Options for rendering environment probes. Cubemaps and panoramic HDRs for external engines'),
                  ('LoadLightmaps', 'Load Lightmaps', 'Options for loading pre-built lightmaps.'),
                  ('NetworkRender', 'Network Rendering', 'Distribute lightmap building across multiple machines.'),
-                 ('MaterialAdjustment', 'Material Adjustment', 'Allows adjustment of multiple materials at once.')],
+                 ('MaterialAdjustment', 'Material Adjustment', 'Allows adjustment of multiple materials at once.'),
+                 ('TexelDensity', 'Texel Density', 'Allows setting texel densities of the UV.')],
                 name = "Utility Context", 
                 description="Set Utility Context", 
                 default='SetBatching')
