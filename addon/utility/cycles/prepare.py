@@ -531,11 +531,11 @@ def configure_meshes(self):
                             if scene.TLM_EngineProperties.tlm_directional_mode == "None":
                                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                     print("Directional mode")
-                                if not len(mainNode.inputs[19].links) == 0:
+                                if not len(mainNode.inputs[22].links) == 0:
                                     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                         print("NOT LEN 0")
-                                    ninput = mainNode.inputs[19].links[0]
-                                    noutput = mainNode.inputs[19].links[0].from_node
+                                    ninput = mainNode.inputs[22].links[0]
+                                    noutput = mainNode.inputs[22].links[0].from_node
                                     nodetree.links.remove(noutput.outputs[0].links[0])
 
                             #Clamp metallic
@@ -687,7 +687,7 @@ def preprocess_material(obj, scene):
 
         #If image not in bpy.data.images or if size changed, make a new image
         if atlas_image_name not in bpy.data.images or bpy.data.images[atlas_image_name].size[0] != res or bpy.data.images[atlas_image_name].size[1] != res:
-            img = bpy.data.images.new(img_name, res, res, alpha=True, float_buffer=True)
+            img = bpy.data.images.new(img_name, int(res), int(res), alpha=True, float_buffer=True)
 
             num_pixels = len(img.pixels)
             result_pixel = list(img.pixels)
