@@ -108,6 +108,11 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         name="Compile statistics", 
         description="Compile time statistics in the lightmap folder.", 
         default=True)
+    
+    tlm_only_prepare : BoolProperty(
+        name="Prepare only", 
+        description="Only does preparations for lightmap baking (UV and material setup) without baking", 
+        default=False)
 
     tlm_apply_on_unwrap : BoolProperty(
         name="Apply scale", 
@@ -559,6 +564,8 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
                  ('NetworkRender', 'Network Rendering', 'Distribute lightmap building across multiple machines.'),
                  ('MaterialAdjustment', 'Material Adjustment', 'Allows adjustment of multiple materials at once.'),
                  ('TexelDensity', 'Texel Density', 'Allows setting texel densities of the UV.'),
+                 #('Denoise', 'Denoise Folder', 'Denoise .'),
+                 #('Filter', 'Filter Folder', 'Filter .'),
                  ('GLTFUtil', 'GLTF Utilities', 'GLTF related material utilities.')],
                 name = "Utility Context", 
                 description="Set Utility Context", 
@@ -570,6 +577,42 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
                 name = "UI Mode", 
                 description="TODO", 
                 default='Simple')
+    
+    tlm_atlasgroup_divisions : IntProperty(
+        name="Atlas group divisions", 
+        default=2, 
+        min=1, 
+        max=10)
+
+    tlm_atlasgroup_division_unwrap_mode : EnumProperty(
+        items = [('Lightmap', 'Lightmap', 'TODO'),
+                 ('SmartProject', 'Smart Project', 'TODO'),
+                 ('AtlasGroupA', 'Atlas Group (Prepack)', 'Attaches the object to a prepack Atlas group. Will overwrite UV map on build.'),
+                 ('Xatlas', 'Xatlas', 'TODO')],
+                name = "Unwrap Mode", 
+                description="TODO", 
+                default='SmartProject')
+    
+    tlm_atlasgroup_division_resolution : EnumProperty(
+        items = [('32', '32', 'TODO'),
+                 ('64', '64', 'TODO'),
+                 ('128', '128', 'TODO'),
+                 ('256', '256', 'TODO'),
+                 ('512', '512', 'TODO'),
+                 ('1024', '1024', 'TODO'),
+                 ('2048', '2048', 'TODO'),
+                 ('4096', '4096', 'TODO'),
+                 ('8192', '8192', 'TODO')],
+                name = "Lightmap Resolution", 
+                description="TODO", 
+                default='256')
+    
+    tlm_atlasgroup_division_unwrap_margin : FloatProperty(
+        name="Unwrap Margin", 
+        default=0.1, 
+        min=0.0, 
+        max=1.0, 
+        subtype='FACTOR')
 
 class TLM_GroupListItem(bpy.types.PropertyGroup):
     obj: PointerProperty(type=bpy.types.Object, description="The object to bake")
