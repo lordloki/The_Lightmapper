@@ -1287,18 +1287,20 @@ def setGui(mode):
 
     if mode == 0:
 
-        context = bpy.context
-        driver = bpy.app.driver_namespace
+        pass
+        #context = bpy.context
+        #driver = bpy.app.driver_namespace
 
-        if "TLM_UI" in driver:
-            driver["TLM_UI"].remove_handle()
+        #if "TLM_UI" in driver:
+        #    driver["TLM_UI"].remove_handle()
 
     if mode == 1:
 
+        pass
         #bpy.context.area.tag_redraw()
-        context = bpy.context
-        driver = bpy.app.driver_namespace
-        driver["TLM_UI"] = Viewport.ViewportDraw(context, "Building Lightmaps")
+        #context = bpy.context
+        #driver = bpy.app.driver_namespace
+        #driver["TLM_UI"] = Viewport.ViewportDraw(context, "Building Lightmaps")
 
         bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
 
